@@ -71,7 +71,7 @@ static int concat_if_new(void **list1, int num1, void *list2, int num2,
 static int list_compare(const int *list1, int num1, const int *list2, int num2);
 
 static void unroll_jam (struct clast_stmt *s, struct clast_stmt *prev);
-static struct clast_stmt* clast_ast_dup(struct clast_stmt *s);
+static struct clast_stmt* clast_ast_dup(const struct clast_stmt *s);
 struct clast_name *new_clast_name(const char *name)
 {
     struct clast_name *n = malloc(sizeof(struct clast_name));
@@ -2557,9 +2557,10 @@ static struct clast_guard * clast_guard_copy(struct clast_guard* g)
     return new_g;
 }
 
-/* Duplicates the entire AST rooted at s. Returns a deep copy of the
- * AST under s. */
-static struct clast_stmt* clast_ast_dup(struct clast_stmt *s)
+/**
+ * Construct a (deep) copy of a statement clast.
+ */
+struct clast_stmt* clast_copy(const struct clast_stmt *s)
 {
     struct clast_stmt *new_stmt;
     struct clast_for *f;
@@ -2572,20 +2573,28 @@ static struct clast_stmt* clast_ast_dup(struct clast_stmt *s)
     if(CLAST_STMT_IS_A(s, stmt_for)) {
         f = (struct clast_for *) s;
         new_stmt = &clast_for_copy(f)->stmt;
-        new_stmt->next = clast_ast_dup(s->next);
     } else if (CLAST_STMT_IS_A(s, stmt_ass)) {
         a = (struct clast_assignment *) s;
         new_stmt = &clast_assignment_copy(a)->stmt;
-        new_stmt->next = clast_ast_dup(s->next);
     } else if (CLAST_STMT_IS_A(s, stmt_user)) {
         u = (struct clast_user_stmt *) s;
         new_stmt = &clast_user_stmt_copy(u)->stmt;
-        new_stmt->next = clast_ast_dup(s->next);
     } else {
         assert(CLAST_STMT_IS_A(s, stmt_guard));
         g = (struct clast_guard *)s;
         new_stmt = &clast_guard_copy(g)->stmt;
-        new_stmt->next = clast_ast_dup(s->next);
     }
+    return new_stmt;
+}
+
+/* Duplicates the entire AST rooted at s. Returns a deep copy of the
+ * AST under s. */
+static struct clast_stmt* clast_ast_dup(const struct clast_stmt *s)
+{
+    if (s == NULL)
+        return NULL;
+
+    struct clast_stmt *new_stmt = clast_copy(s);
+    new_stmt->next = clast_ast_dup(s->next);
     return new_stmt;
 }

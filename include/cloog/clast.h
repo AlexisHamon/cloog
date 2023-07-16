@@ -132,7 +132,7 @@ struct clast_guard {
     struct clast_equation	eq[1];
 };
 
-
+struct clast_stmt* clast_copy(const struct clast_stmt *s);
 struct clast_stmt *cloog_clast_create_from_input(CloogInput *input,
 						 CloogOptions *options);
 struct clast_stmt *cloog_clast_create(CloogProgram *program,
